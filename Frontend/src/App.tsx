@@ -4,7 +4,6 @@ import './App.css'
 
 function App() {
   return (
-    <>
       <div id="background">
         <div id="titleWrapper">
           <h1> Dreamly </h1>
@@ -16,7 +15,6 @@ function App() {
         </div>
 
       </div>
-    </>
   )
 }
 

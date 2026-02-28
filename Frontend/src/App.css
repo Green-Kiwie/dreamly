@@ -1,5 +1,4 @@
 #root {
-  max-width: 1280px;
   margin:0;
   text-align: center;
   justify-content: center;
@@ -22,6 +21,6 @@
 
 #meat {
   display:grid;
-  grid-template-columns: 75% 25%;
+  grid-template-columns: 67% 33%;
   height: 75%;
 }
