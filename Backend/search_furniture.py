@@ -9,15 +9,6 @@ from google.genai import types
 load_dotenv()
 GEMINI_API_KEY = os.environ.get('GEMINI_API_KEY')
 
-# 1. getDefaultHome - General welcome or landing data
-@app.route('/api/home', methods=['GET'])
-def get_default_home():
-    return jsonify({
-        "banner_image": "https://example.com/hero.jpg",
-        "featured_categories": ["Chairs", "Sofas", "Tables", "Lighting"],
-        "message": "Welcome to the Furniture Store API"
-    })
-
 # 2. Furniture Search
 # Example: /api/search?q=Chair
 
