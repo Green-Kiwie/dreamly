@@ -1,8 +1,18 @@
 import { useState } from "react";
 
 function Form() {
+    interface Furniture{
+        name: string;
+        price: string;
+        link: string;
+        image: string;
+        id: string;
+        from: string;
+    }
+
     const [name, setName] = useState("");
     const [picture, setPicture] = useState("");
+    const [furnitures, setfurnitures] = useState<Furniture[]>([]);
 
     const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
@@ -13,8 +23,33 @@ function Form() {
         reader.readAsDataURL(file);
     };
 
-    const handleSubmit = (e: React.SubmitEvent<HTMLFormElement>) => {
+    const postSearch = async () => {
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/api/search`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.parse(`{
+                "image_b64": ${picture},
+                "text": ${name}
+                }`),
+        });
+
+        const results: Furniture[] = await response.json();
+        setfurnitures(results)
+    };
+
+    const handleSubmit = async (e: React.SubmitEvent<HTMLFormElement>) => {
         e.preventDefault();
+
+        if(name == "" && picture == ""){
+            return
+        }
+        try{
+            await postSearch()
+        }
+        catch(e){
+            console.log("Posting Error")
+            console.log(e)
+        }
 
         console.log({ name });
         console.log({ picture });
@@ -39,7 +74,13 @@ function Form() {
                 </form>
             </div>
 
-            <div id="resultwrapper">Results</div>
+            <div id="resultwrapper">
+                {furnitures.map((furniture)=>(
+                    <div>
+                        <img src={furniture.image}/>
+                    </div>
+                ))}
+            </div>
         </div>
     );
 }
