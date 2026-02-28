@@ -1,21 +1,33 @@
-import {wrapper} from './Wrapper'
-import {form} from './form'
-import './App.css'
+import { useRoutes } from "react-router-dom";
+import Landing from "./components/Landing";
+import Navbar from "./components/Navbar";
+import Editor from "./components/Editor";
+import About from "./components/About";
+import "./App.css";
 
 function App() {
-  return (
-      <div id="background">
-        <div id="titleWrapper">
-          <h1> Dreamly </h1>
-        </div>
-        
-        <div id="meat">
-          {wrapper()}
-          {form()}
-        </div>
-
-      </div>
-  )
+    let element = useRoutes([
+        {
+            path: "/",
+            element: <Landing />,
+        },
+        {
+            path: "/Editor",
+            element: <Editor />,
+        },
+        {
+            path: "/About",
+            element: <About />,
+        },
+    ]);
+    return (
+        <>
+            <div className="app-container">
+                <Navbar />
+                {element}
+            </div>
+        </>
+    );
 }
 
-export default App
+export default App;
