@@ -2,3 +2,6 @@ flask
 google-genai
 python-dotenv
 ikea_api
+opencv-python-headless
+curl_cffi
+beautifulsoup4
