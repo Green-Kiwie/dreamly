@@ -1,0 +1,9 @@
+#landing-wrapper{
+  background-color: aquamarine;
+  display:flex;
+  justify-content: center;
+  align-items: center;
+  width:100%;
+  padding-top: 20%;
+  padding-bottom: 20%;
+}
