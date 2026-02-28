@@ -1,0 +1,15 @@
+#searchWrapper{
+  width: 100%;
+  height: 100%;
+  justify-content: center;
+  align-items: center;
+}
+
+#formWrapper{
+  justify-content: center;
+}
+
+#form{
+  justify-content: center;
+  text-align: center;
+}

@@ -1,0 +1,27 @@
+#root {
+  max-width: 1280px;
+  margin:0;
+  text-align: center;
+  justify-content: center;
+  align-items: center;
+  background-color: #93CAED;
+  height: 100vh;
+  width: 100%;
+}
+
+#background {
+  background-color: blue;
+  height: 100%;
+  width: 100%;
+  align-items: center;
+}
+
+#titleWrapper {
+  padding: 1%;
+}
+
+#meat {
+  display:grid;
+  grid-template-columns: 75% 25%;
+  height: 75%;
+}
