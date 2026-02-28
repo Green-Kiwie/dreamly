@@ -10,11 +10,14 @@ function Navbar() {
                 </Link>
             </div>
             <div className="navbar-links">
-                <Link to="/Editor" className="nav-button">
-                    Editor
-                </Link>
-                <Link to="/About" className="nav-button">
+                <Link to="/about" className="nav-button">
                     About
+                </Link>
+                <Link to="/HowItWorks" className="nav-button">
+                    How It Works
+                </Link>
+                <Link to="/faq" className="nav-button">
+                    FAQ
                 </Link>
             </div>
         </nav>
