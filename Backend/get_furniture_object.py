@@ -1,6 +1,7 @@
 import torch
 from PIL import Image
 import trimesh
+import base64
 # import gc  
 
 # 1. Verification Check
@@ -14,7 +15,6 @@ from hy3dgen.shapegen import Hunyuan3DDiTFlowMatchingPipeline
 import io
 
 model_path = 'tencent/Hunyuan3D-2'
-image_path = 'chair.png'
 
 def make_3d_from_image(image_bytes):
     # --- STEP 1: Process Image & Background ---
@@ -71,8 +71,23 @@ def get_image_bytes_from_file(file_path):
         print(f"Error: The file at {file_path} was not found.")
         return None
     
+def convert_mesh_to_glb_bytes(mesh):
+    glb_buffer = io.BytesIO()
+    mesh.export(glb_buffer, file_type='glb')
+    glb_buffer.seek(0)
+    glb_bytes = glb_buffer.getvalue()
+    glb_base64 = base64.b64encode(glb_bytes).decode('utf-8')
+    
+    return glb_base64
+    
+def generate_furniture():
+    geometry_mesh = make_3d_from_image(image_byte)
+    glb_obj = convert_mesh_to_glb_bytes(geometry_mesh)
+    dimensions = get_obj_dimensions(obj_mesh)
+    return glb_obj, dimensions
+
 if __name__ == "__main__":
-    image_byte = get_image_bytes_from_file("Ikea_table_sample.png")
+    image_byte = get_image_bytes_from_file("furniture_files/Ikea_table_sample.png")
     obj_mesh = make_3d_from_image(image_byte)
     size = get_obj_dimensions(obj_mesh)
 

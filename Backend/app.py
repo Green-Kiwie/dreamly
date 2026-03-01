@@ -1,5 +1,6 @@
 from flask import Flask, jsonify, request
 from search_furniture import * 
+from get_furniture_object import generate_furniture
 
 app = Flask(__name__)
 
@@ -34,15 +35,31 @@ def search_furniture():
 
 # 3. Furniture Object - Get details for a specific item by ID
 # Example: /api/furniture/1
-@app.route('/api/furniture/<int:item_id>', methods=['GET'])
-def get_furniture_object(item_id):
-    # Find the item with the matching ID
-    item = next((item for item in inventory if item['id'] == item_id), None)
-    
-    if item:
-        return jsonify(item)
-    
-    return jsonify({"error": "Item not found"}), 404
+@app.route('/api/furniture/generate', methods=['POST'])
+def process_furniture_data():
+    # 1. Get the text data from the form
+    text_data = request.form.get('description', 'No description provided')
+    category = request.form.get('category', 'unknown')
 
-if __name__ == '__main__':
-    app.run(debug=True)
+    # 2. Get the image from the request
+    if 'image' not in request.files:
+        return jsonify({"error": "No image uploaded"}), 400
+    
+    image_file = request.files['image']
+
+    img_bytes = image_file.read()
+
+    try:
+        glb_bytes, dimensions = generate_furniture(img_bytes)
+
+        return jsonify({
+            "status": "success",
+            "model_base64": glb_bytes,
+            "metadata": {
+                "dimensions": dimensions,
+                "format": "glb",
+                "unit": "meters"
+            }
+        })
+    except Exception as e:
+        return jsonify({"error": f"Processing failed: {str(e)}"}), 500
