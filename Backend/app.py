@@ -3,7 +3,8 @@ from search_furniture import get_search_results
 from get_furniture_object import generate_furniture
 from flask_cors import CORS
 import threading
-
+from pyngrok import ngrok
+import io
 app = Flask(__name__)
 CORS(app)
 
@@ -18,7 +19,7 @@ def get_default_home():
         "message": "Welcome to the Furniture Store API"
     })
 
-# curl -X POST -H "Content-Type: application/json" -d @filename.json [API_ENDPOINT_URL]
+# curl -X POST -H "Content-Type: application/json" -d @test_file.json https://thoroughly-nonactinic-david.ngrok-free.dev"
 
 @app.route('/api/search', methods=['POST'])
 def search_furniture():
@@ -44,24 +45,21 @@ def process_furniture_data():
         image_file = request.files['image'] or None
         img_bytes = image_file.read()
 
-        glb_bytes, dimensions = generate_furniture(image_url, img_bytes)
+        obj_mesh, dimensions = generate_furniture(image_url, img_bytes)
 
-        return jsonify({
-            "status": "success",
-            "model_base64": glb_bytes,
-            "metadata": {
-                "dimensions": dimensions,
-                "format": "glb",
-                "unit": "meters"
-            }
-        })
+        export_buffer = io.BytesIO()
+        obj_mesh.export(export_buffer, file_type='glb')
+        glb_bytes = export_buffer.getvalue()
+
+        return glb_bytes, dimensions
 
     except Exception as e:
         print("error: ", str(e))
         return jsonify({"error": f"Processing failed: {str(e)}"}), 500
 
-    finally:
-        processing_lock.release()
-    
+
 if __name__ == '__main__':
-    app.run(port=5000, debug=True, use_reloader=False)  # If 'port' isn't specified, it defaults to 5000
+    public_url = ngrok.connect(5000)
+    print(public_url)
+    app.run(host='0.0.0.0', port=5000, debug=True, use_reloader=False)  # If 'port' isn't specified, it defaults to 5000
+    

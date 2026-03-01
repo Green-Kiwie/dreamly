@@ -1,4 +1,4 @@
-import torch
+# import torch
 from PIL import Image
 import trimesh
 import base64
@@ -7,18 +7,19 @@ import gc
 import requests
 import os
 from pathlib import Path
-
-# 1. Verification Check
-print(f"CUDA Available: {torch.cuda.is_available()}")
-if torch.cuda.is_available():
-    print(f"Using GPU: {torch.cuda.get_device_name(0)}")
-
-from hy3dgen.rembg import BackgroundRemover
-from hy3dgen.shapegen import Hunyuan3DDiTFlowMatchingPipeline
-from hy3dgen.texgen import Hunyuan3DPaintPipeline
 import io
 
-model_path = 'tencent/Hunyuan3D-2'
+# 1. Verification Check
+# print(f"CUDA Available: {torch.cuda.is_available()}")
+# if torch.cuda.is_available():
+#     print(f"Using GPU: {torch.cuda.get_device_name(0)}")
+
+# from hy3dgen.rembg import BackgroundRemover
+# from hy3dgen.shapegen import Hunyuan3DDiTFlowMatchingPipeline
+# from hy3dgen.texgen import Hunyuan3DPaintPipeline
+# import io
+
+# model_path = 'tencent/Hunyuan3D-2'
 
 # pipeline_shapegen = Hunyuan3DDiTFlowMatchingPipeline.from_pretrained(
 #     model_path,
@@ -41,82 +42,82 @@ model_path = 'tencent/Hunyuan3D-2'
 # )
 # pipeline_shapegen.enable_flashvdm()
 # pipeline_texgen = Hunyuan3DPaintPipeline.from_pretrained(model_path)
-pipeline_shapegen = Hunyuan3DDiTFlowMatchingPipeline.from_pretrained(
-    'tencent/Hunyuan3D-2mini',
-    subfolder='hunyuan3d-dit-v2-mini',
-    variant='fp16'
-)
-pipeline_texgen = Hunyuan3DPaintPipeline.from_pretrained('tencent/Hunyuan3D-2')
-pipeline_shapegen.enable_flashvdm()
+# pipeline_shapegen = Hunyuan3DDiTFlowMatchingPipeline.from_pretrained(
+#     'tencent/Hunyuan3D-2mini',
+#     subfolder='hunyuan3d-dit-v2-mini',
+#     variant='fp16'
+# )
+# pipeline_texgen = Hunyuan3DPaintPipeline.from_pretrained('tencent/Hunyuan3D-2')
+# pipeline_shapegen.enable_flashvdm()
 
-def make_3d_from_image(image_bytes):
-    # --- STEP 1: Process Image & Background ---
-    image = Image.open(io.BytesIO(image_bytes)).convert("RGBA")
+# def make_3d_from_image(image_bytes):
+#     # --- STEP 1: Process Image & Background ---
+#     image = Image.open(io.BytesIO(image_bytes)).convert("RGBA")
 
 
-    # Background removal usually needs very little VRAM/RAM
-    rembg = BackgroundRemover()
-    image = rembg(image)
+#     # Background removal usually needs very little VRAM/RAM
+#     rembg = BackgroundRemover()
+#     image = rembg(image)
 
-    # --- STEP 2: Shape Generation ---
-    # We use float16 and device_map="auto" to load directly to GPU
-    print("Loading ShapeGen Pipeline to GPU...")
-    # pipeline_shapegen = Hunyuan3DDiTFlowMatchingPipeline.from_pretrained(
-    #     'tencent/Hunyuan3D-2mini',
-    #     subfolder='hunyuan3d-dit-v2-mini',
-    #     variant='fp16',
-    #     low_cpu_mem_usage=True
-    # )
-    # pipeline_shapegen = Hunyuan3DDiTFlowMatchingPipeline.from_pretrained(
-    #     model_path,
-    #     subfolder='hunyuan3d-dit-v2-0-turbo',
-    #     torch_dtype=torch.float16,
-    #     device_map="auto",
-    #     low_cpu_mem_usage=True
-    # )
-    # pipeline_shapegen.enable_flashvdm()
+#     # --- STEP 2: Shape Generation ---
+#     # We use float16 and device_map="auto" to load directly to GPU
+#     print("Loading ShapeGen Pipeline to GPU...")
+#     # pipeline_shapegen = Hunyuan3DDiTFlowMatchingPipeline.from_pretrained(
+#     #     'tencent/Hunyuan3D-2mini',
+#     #     subfolder='hunyuan3d-dit-v2-mini',
+#     #     variant='fp16',
+#     #     low_cpu_mem_usage=True
+#     # )
+#     # pipeline_shapegen = Hunyuan3DDiTFlowMatchingPipeline.from_pretrained(
+#     #     model_path,
+#     #     subfolder='hunyuan3d-dit-v2-0-turbo',
+#     #     torch_dtype=torch.float16,
+#     #     device_map="auto",
+#     #     low_cpu_mem_usage=True
+#     # )
+#     # pipeline_shapegen.enable_flashvdm()
 
-    mesh = pipeline_shapegen(image=image, num_inference_steps=5, octree_resolution=256,)[0]
+#     mesh = pipeline_shapegen(image=image, num_inference_steps=5, octree_resolution=256,)[0]
 
-    # del pipeline_shapegen # Delete the first pipeline
+#     # del pipeline_shapegen # Delete the first pipeline
 
-    gc.collect()
-    torch.cuda.empty_cache()
+#     gc.collect()
+#     torch.cuda.empty_cache()
 
-    # mesh.export('chair_shape_only.glb')
-    return mesh
+#     # mesh.export('chair_shape_only.glb')
+#     return mesh
 
-def texture_3d_mesh(mesh, image_bytes):
-    image = Image.open(io.BytesIO(image_bytes)).convert("RGBA")
-    # pipeline_texgen = Hunyuan3DPaintPipeline.from_pretrained(model_path)
-    print("starting texgen now")
-    num_cores = os.cpu_count() 
-    torch.set_num_threads(num_cores)
-    torch.set_num_interop_threads(num_cores)
-    print(f"PyTorch is now using {torch.get_num_threads()} threads.")
-    # pipeline_texgen.to("cuda")
-    mesh = pipeline_texgen(mesh, image=image)
-    print("texgen complete")
-    return mesh
+# def texture_3d_mesh(mesh, image_bytes):
+#     image = Image.open(io.BytesIO(image_bytes)).convert("RGBA")
+#     # pipeline_texgen = Hunyuan3DPaintPipeline.from_pretrained(model_path)
+#     print("starting texgen now")
+#     num_cores = os.cpu_count() 
+#     torch.set_num_threads(num_cores)
+#     torch.set_num_interop_threads(num_cores)
+#     print(f"PyTorch is now using {torch.get_num_threads()} threads.")
+#     # pipeline_texgen.to("cuda")
+#     mesh = pipeline_texgen(mesh, image=image)
+#     print("texgen complete")
+#     return mesh
 
-def reduce_mesh_face(mesh):
-    print(f"Original face count: {len(mesh.faces)}")
+# def reduce_mesh_face(mesh):
+#     print(f"Original face count: {len(mesh.faces)}")
 
-    mesh.merge_vertices()
-    mesh.remove_duplicate_faces()
-    print("duplicate remove face count: ", mesh.faces)
+#     mesh.merge_vertices()
+#     mesh.remove_duplicate_faces()
+#     print("duplicate remove face count: ", mesh.faces)
 
-    # Target 45,000 faces (standard for high-quality furniture assets)
-    target_faces = 15000
+#     # Target 45,000 faces (standard for high-quality furniture assets)
+#     target_faces = 15000
 
-    if len(mesh.faces) > target_faces:
-        print(f"Decimating mesh to {target_faces} faces...")
-        # simplify_quadratic_decimation reduces faces while preserving shape
-        # mesh = mesh.simplify_quadric_decimation(face_count=target_faces)
-        mesh = mesh.simplify_quadric_decimation(target_faces = target_faces)
+#     if len(mesh.faces) > target_faces:
+#         print(f"Decimating mesh to {target_faces} faces...")
+#         # simplify_quadratic_decimation reduces faces while preserving shape
+#         # mesh = mesh.simplify_quadric_decimation(face_count=target_faces)
+#         mesh = mesh.simplify_quadric_decimation(target_faces = target_faces)
     
-    print(f"New face count: {len(mesh.faces)}")
-    return mesh
+#     print(f"New face count: {len(mesh.faces)}")
+#     return mesh
     
 def get_obj_dimensions(mesh):
     """
@@ -186,10 +187,11 @@ def return_cache(image_url):
 
     # rglob("*") finds all files recursively
     for path in current_dir.rglob("*"):
+        # print("checking", path)
         if path.is_file():
             # Check if full name matches OR if name without extension matches
-            if path.name.lower() == image_url.lower() or \
-               path.stem.lower() == image_url.lower():
+            if path.name == image_url or \
+               path.stem== image_url:
                 return str(path.absolute())
                 
                 
@@ -214,20 +216,20 @@ def generate_furniture(image_url, image_byte):
 
     return obj_mesh, dimensions
 
-if __name__ == "__main__":
-    print("starting main now")
-    image_byte = get_image_bytes_from_file("furniture_files/chair.png")
+# if __name__ == "__main__":
+#     print("starting main now")
+#     image_byte = get_image_bytes_from_file("furniture_files/chair.png")
     
-    obj_mesh = make_3d_from_image(image_byte)
-    obj_mesh = reduce_mesh_face(obj_mesh)
-    obj_mesh = texture_3d_mesh(obj_mesh, image_byte)
+#     # obj_mesh = make_3d_from_image(image_byte)
+#     # obj_mesh = reduce_mesh_face(obj_mesh)
+#     # obj_mesh = texture_3d_mesh(obj_mesh, image_byte)
     
-    size = get_obj_dimensions(obj_mesh)
+#     size = get_obj_dimensions(obj_mesh)
 
-    obj_mesh.export('chair_test_pipeline1.glb')
+#     obj_mesh.export('chair_test_pipeline1.glb')
 
-    mesh = trimesh.load("chair_test_pipeline1.glb", force="mesh")
-    mesh.export("chair_test_pipeline1.obj", include_texture=True)
-    print(size)
+#     mesh = trimesh.load("chair_test_pipeline1.glb", force="mesh")
+#     mesh.export("chair_test_pipeline1.obj", include_texture=True)
+#     print(size)
     
 
