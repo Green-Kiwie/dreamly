@@ -1,9 +1,9 @@
 from flask import Flask, jsonify, request
 from search_furniture import get_search_results
-from get_furniture_object import generate_furniture
+# from get_furniture_object import generate_furniture
 from flask_cors import CORS
 import threading
-
+from pyngrok import ngrok
 app = Flask(__name__)
 CORS(app)
 
@@ -18,13 +18,13 @@ def get_default_home():
         "message": "Welcome to the Furniture Store API"
     })
 
-# curl -X POST -H "Content-Type: application/json" -d @filename.json [API_ENDPOINT_URL]
+# curl -X POST -H "Content-Type: application/json" -d @test_file.json https://thoroughly-nonactinic-david.ngrok-free.dev"
 
 @app.route('/api/search', methods=['POST'])
 def search_furniture():
     return jsonify({'results': get_search_results(request.json)})
 
-
+'''
 # 3. Furniture Object - Get details for a specific item by ID
 # Example: /api/furniture/1
 @app.route('/api/furniture/generate', methods=['POST'])
@@ -63,5 +63,9 @@ def process_furniture_data():
     finally:
         processing_lock.release()
     
+'''
 if __name__ == '__main__':
-    app.run(port=5000, debug=True, use_reloader=False)  # If 'port' isn't specified, it defaults to 5000
+    public_url = ngrok.connect(5000)
+    print(public_url)
+    app.run(host='0.0.0.0', port=5000, debug=True, use_reloader=False)  # If 'port' isn't specified, it defaults to 5000
+    

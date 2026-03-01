@@ -26,12 +26,12 @@ def get_search_results(data):
 def get_search_text(data):
     base64_image = data.get('image_b64')
 
-    if ',' in base64_image:
-        base64_image = base64_image.split(",")[1]
-
     text_query = data.get('text')
 
     if base64_image:
+        if ',' in base64_image:
+            base64_image = base64_image.split(",")[1]
+        
         text_part = "Describe the main furniture piece in the given image with keywords as if you were looking it up on a online shopping platform. An example response would be 'small green cloth chair with wooden legs'"
         image_part = types.Part.from_bytes(
             data=base64_image,

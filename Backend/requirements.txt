@@ -7,3 +7,5 @@ curl_cffi
 beautifulsoup4
 playwright 
 playwright-stealth
+pyngrok
+flask_cors
