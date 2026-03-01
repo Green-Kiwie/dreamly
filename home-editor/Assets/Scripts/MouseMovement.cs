@@ -92,10 +92,16 @@ public class MouseMovement : MonoBehaviour
             if (inputEnabled)
             {
                 pendingLockRequest = true;
+#if UNITY_WEBGL && !UNITY_EDITOR
+                WebGLInput.captureAllKeyboardInput = true;
+#endif
             }
             else
             {
                 ReleaseCursorLock();
+#if UNITY_WEBGL && !UNITY_EDITOR
+                WebGLInput.captureAllKeyboardInput = false;
+#endif
             }
         }
 
