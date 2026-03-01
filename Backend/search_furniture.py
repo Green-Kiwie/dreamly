@@ -79,8 +79,7 @@ def get_google_listings(text_query, k):
 
         results.append({
             "name": product.get("title"),
-            "price": product.get("extracted_price"),   # float, easier to work with than string
-            "price_str": product.get("price"),          # formatted string e.g. "$199.99"
+            "price": product.get("extracted_price"),
             "link": link,
             "image": product.get("thumbnail"),
             "id": product.get("product_id"),
