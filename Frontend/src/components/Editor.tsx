@@ -3,6 +3,8 @@ import type { ChangeEvent } from "react";
 import { Unity, useUnityContext } from "react-unity-webgl";
 import Form from "./form";
 
+export const webglRef = { sendMessage: null as any };
+
 const Editor: React.FC = () => {
     // Define the Unity configuration with explicit paths
     const { unityProvider, loadingProgression, isLoaded, sendMessage } =
@@ -13,21 +15,8 @@ const Editor: React.FC = () => {
             codeUrl: "/UnityBuild/Build/UnityBuild.wasm.br",
         });
 
-    // HAVE TO MANUALLY CALL WHEN DATA IS PASSED FROM AUSTIN
-    const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
-        const file = event.target.files?.[0];
-        if (!file || !isLoaded) return;
-
-        // Create a temporary local URL for the GLB blob
-        const blobUrl = URL.createObjectURL(file);
-
-        // Tell Unity to fetch the file from this URL
-        // Parameters: (GameObjectName, MethodName, ParameterValue)
-        sendMessage("ModelManager", "LoadModelFromUrl", blobUrl);
-
-        // Note: You can revoke the URL later in Unity or after a timeout
-        // to free up browser memory.
-    };
+    // Store sendMessage so other files can access it
+    webglRef.sendMessage = sendMessage;
 
     return (
         <div style={{ width: "100%", height: "100vh", position: "relative" }}>
