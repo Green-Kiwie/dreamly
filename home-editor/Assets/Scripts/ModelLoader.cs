@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using UnityEngine;
 using GLTFast;
 using GLTFast.Materials;
@@ -25,7 +26,7 @@ public class ModelLoader : MonoBehaviour
             byte[] glbData = Convert.FromBase64String(base64String);
             Debug.Log($"GLB data received: {glbData.Length} bytes");
 
-            StartCoroutine(LoadGLBCoroutine(glbData));
+            _ = LoadGLBAsync(glbData); // Fire and forget
         }
         catch (Exception e)
         {
@@ -33,7 +34,7 @@ public class ModelLoader : MonoBehaviour
         }
     }
 
-    private IEnumerator LoadGLBCoroutine(byte[] glbData)
+    private async Task LoadGLBAsync(byte[] glbData)
     {
         // Create container for loaded model
         GameObject loadedModel = new GameObject("LoadedGLBModel_" + loadedModels.Count);
@@ -42,7 +43,13 @@ public class ModelLoader : MonoBehaviour
         // Set position to hand location if assigned, otherwise default position
         if (handLocation != null)
         {
-            loadedModel.transform.SetPositionAndRotation(handLocation.position, handLocation.rotation);
+            // Get the current rotation angles of the hand
+            Vector3 handEuler = handLocation.rotation.eulerAngles;
+            
+            // Force X and Z to 0 to keep it parallel to the ground, but keep the Y (yaw) direction
+            Quaternion flatRotation = Quaternion.Euler(0, handEuler.y, 0);
+            
+            loadedModel.transform.SetPositionAndRotation(handLocation.position, flatRotation);
         }
         else
         {
@@ -54,37 +61,34 @@ public class ModelLoader : MonoBehaviour
         var materialGenerator = new BuiltInMaterialGenerator();
         GltfImport gltfImport = new GltfImport(materialGenerator: materialGenerator);
 
-        var loadTask = gltfImport.Load(glbData, new Uri("http://localhost/"));
-        yield return new WaitUntil(() => loadTask.IsCompleted);
-
-        if (loadTask.IsCanceled)
+        bool loadSuccess;
+        try
         {
-            Debug.LogError("GLB load task was canceled.");
-            Destroy(loadedModel);
-            yield break;
+            loadSuccess = await gltfImport.Load(glbData, new Uri("http://localhost/"));
         }
-
-        if (loadTask.IsFaulted)
+        catch (Exception e)
         {
-            Debug.LogError($"GLB load task failed: {loadTask.Exception}");
+            Debug.LogError($"GLB load failed: {e.Message}");
             Destroy(loadedModel);
-            yield break;
+            return;
         }
-
-        bool loadSuccess = loadTask.Result;
 
         if (loadSuccess)
         {
             // Wait for the instantiation task to finish so materials generate correctly
-            var instantiateTask = gltfImport.InstantiateMainSceneAsync(loadedModel.transform);
-            yield return new WaitUntil(() => instantiateTask.IsCompleted);
+            bool instantiateSuccess = await gltfImport.InstantiateMainSceneAsync(loadedModel.transform);
 
-            if (instantiateTask.Result)
+            if (instantiateSuccess)
             {
-                // Add Rigidbody with gravity disabled
+                // Add Rigidbody matching your cube's inspector settings
                 Rigidbody rb = loadedModel.AddComponent<Rigidbody>();
-                rb.useGravity = false;
-                rb.isKinematic = true;
+                rb.mass = 1f;
+                rb.useGravity = true;
+                rb.isKinematic = false;
+                
+                // Note: Depending on your exact Unity version, these might be called "drag" and "angularDrag" in code instead
+                rb.linearDamping = 0f;     
+                rb.angularDamping = 0.05f; 
 
                 // Apply layer recursively
                 int spawnedLayer = LayerMask.NameToLayer(spawnedModelLayerName);

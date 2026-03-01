@@ -57,17 +57,26 @@ public class PlayerPickUpDrop : MonoBehaviour
         // Raycast to find an object to pick up
         if (Physics.Raycast(playerCameraTransform.position, playerCameraTransform.forward, out RaycastHit hit, pickUpDistance, pickUpLayerMask))
         {
-            heldObject = hit.collider.gameObject;
-            heldRigidbody = heldObject.GetComponent<Rigidbody>();
+            // Look for the Rigidbody on the parent if we hit a child mesh collider
+            heldRigidbody = hit.collider.GetComponentInParent<Rigidbody>();
+
+            // If we found a Rigidbody, grab the root object. Otherwise, fall back to what we hit.
+            if (heldRigidbody != null)
+            {
+                heldObject = heldRigidbody.gameObject;
+                heldRigidbody.useGravity = false;
+                heldRigidbody.isKinematic = false; // Make it dynamic so it collides with obstacles
+
+                // Only freeze rotation so physics doesn't spin it
+                heldRigidbody.constraints = RigidbodyConstraints.FreezeRotation;
+            }
+            else
+            {
+                heldObject = hit.collider.gameObject;
+            }
 
             // Store original layer
             originalLayer = heldObject.layer;
-
-            if (heldRigidbody != null)
-            {
-                heldRigidbody.useGravity = false;
-                heldRigidbody.isKinematic = true;
-            }
 
             // Change layer to HeldObject (collides with environment, not player)
             int heldLayer = LayerMask.NameToLayer(heldObjectLayerName);
@@ -92,7 +101,16 @@ public class PlayerPickUpDrop : MonoBehaviour
         }
 
         Vector3 targetPos = playerCameraTransform.position + (playerCameraTransform.forward * currentTargetDistance);
-        heldObject.transform.position = Vector3.Lerp(heldObject.transform.position, targetPos, Time.deltaTime * moveSpeed);
+
+        // Use MovePosition for proper physics collision instead of direct transform.position
+        if (heldRigidbody != null)
+        {
+            heldRigidbody.MovePosition(Vector3.Lerp(heldObject.transform.position, targetPos, Time.deltaTime * moveSpeed));
+        }
+        else
+        {
+            heldObject.transform.position = Vector3.Lerp(heldObject.transform.position, targetPos, Time.deltaTime * moveSpeed);
+        }
 
         // Keep object level (only allow Y-axis rotation)
         Vector3 currentEuler = heldObject.transform.eulerAngles;
@@ -114,8 +132,10 @@ public class PlayerPickUpDrop : MonoBehaviour
 
         if (heldRigidbody != null)
         {
-            heldRigidbody.useGravity = false;
-            heldRigidbody.isKinematic = false;
+            // Turn gravity back ON so it falls like a regular object
+            heldRigidbody.useGravity = true;
+            // Remove all constraints so it can move freely
+            heldRigidbody.constraints = RigidbodyConstraints.None;
         }
 
         // Restore original layer
