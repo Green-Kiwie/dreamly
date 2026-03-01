@@ -14,7 +14,7 @@ function App() {
     let element = useRoutes([
         {
             path: "/",
-            element: <Landing />,
+            element: <Editor />,
         },
         {
             path: "/Editor",
