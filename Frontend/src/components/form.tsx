@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { webglRef } from "./Editor";
-import './Form.css'
-import data from "./search_result_text.json";
+import './Form.css';
 
 function Form() {
     interface Furniture{
@@ -22,14 +21,20 @@ function Form() {
         if (!file) return;
 
         const reader = new FileReader();
-        reader.onload = () => setPicture(reader.result as string);
+        reader.onload = () => {
+            const result = reader.result as string;
+            const base64 = result.split(",")[1];
+            setPicture(base64)};
         reader.readAsDataURL(file);
     };
 
     const postSearch = async () => {
         const response = await fetch(`${import.meta.env.VITE_API_URL}/api/search`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 
+                'Content-Type': 'application/json',
+                'ngrok-skip-browser-warning': 'true'
+             },
             body: JSON.stringify({
                 "image_b64": picture,
                 "text": name
@@ -49,6 +54,7 @@ function Form() {
         }
         try{
             await postSearch()
+            console.log(furnitures[0].from)
         }
         catch(e){
             console.log("Posting Error")
@@ -56,14 +62,42 @@ function Form() {
         }
     };
 
-    const postFurniture = async (image:string ) => {
+    const addButton = () => {
+        if(picture == ""){
+            return(
+                <div/>
+            )
+        }else{
+            return(
+                <button onClick={() => {postFurniture()}}>hello</button>
+            )
+        }
+        
+    }
+
+    const base64ToBlob = (image: string = picture, mimeType: string = 'image/jpeg'): Blob => {
+        const byteCharacters = atob(image);
+        const byteNumbers = Array.from(byteCharacters).map(c => c.charCodeAt(0));
+        const byteArray = new Uint8Array(byteNumbers);
+        return new Blob([byteArray], { type: mimeType });
+    };
+
+    const postFurniture = async (image: string = picture) => {
+        const blob = base64ToBlob(image);
         const formData = new FormData();
-        formData.append('image', image);
-        formData.append('category', '');
+        formData.append('image', blob);
+
+        if (blob.size > 10 * 1024 * 1024) { // 10MB limit
+            alert("File is too large for the ngrok tunnel! Please use a smaller image.");
+            return;
+        }
 
         const response = await fetch(`${import.meta.env.VITE_API_URL}/api/furniture/generate`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 
+                /*'Content-Type': 'application/json',*/
+                'ngrok-skip-browser-warning': 'true' 
+             },
             body: formData
         });
 
@@ -77,6 +111,7 @@ function Form() {
         try{
             console.log("hi")
             const result = await postFurniture(image)
+            console.log(result)
             webglRef.sendMessage?.('ModelManager', 'ModelLoader', result);
         }
         catch(e){
@@ -86,15 +121,17 @@ function Form() {
     };
 
     return (
-        <div id="searchWrapper">
-            <div id="formWrapper">
+        <div id="search-wrapper">
+            <div id="form-wrapper">
                 <form id="form" onSubmit={handleSubmit}>
-                    <input
-                        value={name}
-                        onChange={(e) => setName(e.target.value)}
-                        id="search"
-                        placeholder="Start searching for furniture"
-                    />
+                    <div id="search">
+                        <input id="search-input"
+                            value={name}
+                            onChange={(e) => setName(e.target.value)}
+                            placeholder="Start searching for furniture"
+                        />
+                    </div>
+                    <p>or</p>
                     <input
                         type="file"
                         accept="image/*"
@@ -102,6 +139,7 @@ function Form() {
                     />
                     <button type="submit">Submit</button>
                 </form>
+                {addButton()}
             </div>
 
             <div id="result-wrapper">
