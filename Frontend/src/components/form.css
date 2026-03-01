@@ -13,3 +13,30 @@
   justify-content: center;
   text-align: center;
 }
+
+#result-wrapper{
+  display: grid;
+  min-width: 100%;
+  width: 100%;
+  max-width: 100%;
+  max-height: 550px;
+  overflow-y: scroll;
+  border: 2px solid blue;
+  grid-template-columns: 50% 50%;
+  justify-items: center;
+  align-items: center;
+}
+
+.result{
+  overflow: hidden;
+  border: 2px solid black;
+  margin: 4px;
+  width: 200px;
+  height: 200px;
+}
+
+.result img {
+  height: 100%;
+  width: 100%;
+  object-fit: contain; 
+}

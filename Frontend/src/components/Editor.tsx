@@ -1,5 +1,4 @@
 import React from "react";
-import type { ChangeEvent } from "react";
 import { Unity, useUnityContext } from "react-unity-webgl";
 import Form from "./form";
 
@@ -37,13 +36,14 @@ const Editor: React.FC = () => {
                     </p>
                 </div>
             )}
+            <div style={{display: "grid", gridTemplateColumns: "67% 33%"}}>
+                <Unity
+                    unityProvider={unityProvider}
+                    style={{ width: "100%", height: "100%" }}
+                />
 
-            <Unity
-                unityProvider={unityProvider}
-                style={{ width: "75%", height: "75%" }}
-            />
-
-            <Form />
+                <Form />
+            </div>
         </div>
     );
 };
