@@ -1,6 +1,6 @@
 import React, { useEffect } from "react";
 import { Unity, useUnityContext } from "react-unity-webgl";
-import Form from "./Form";
+import Form from "./form";
 
 export const webglRef = { sendMessage: null as any };
 
