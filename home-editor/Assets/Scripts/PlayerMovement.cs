@@ -15,6 +15,8 @@ public class PlayerMovement : MonoBehaviour
     private Vector3 moveDampVelocity;
     private Vector3 currentForceVelocity;
 
+    private bool inputEnabled = true;
+
     private InputAction moveAction;
     private InputAction runAction;
     private InputAction jumpAction;
@@ -56,6 +58,20 @@ public class PlayerMovement : MonoBehaviour
 
     private void Update()
     {
+        // Toggle input with Escape key
+        if (Keyboard.current.escapeKey.wasPressedThisFrame)
+        {
+            inputEnabled = !inputEnabled;
+            Cursor.lockState = inputEnabled ? CursorLockMode.Locked : CursorLockMode.None;
+            Cursor.visible = !inputEnabled;
+        }
+
+        // Only process input if enabled
+        if (!inputEnabled)
+        {
+            return;
+        }
+
         Vector2 input = moveAction.ReadValue<Vector2>();
         Vector3 playerInput = new Vector3(input.x, 0f, input.y);
 

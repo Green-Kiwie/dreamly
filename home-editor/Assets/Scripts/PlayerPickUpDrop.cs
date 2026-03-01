@@ -11,17 +11,38 @@ public class PlayerPickUpDrop : MonoBehaviour
     [SerializeField] private float holdDistance = 2.5f;
     [SerializeField] private float moveSpeed = 15f;
     [SerializeField] private float rotationSpeed = 100f;
+    [SerializeField] private string heldObjectLayerName = "holdLayer";
 
     private GameObject heldObject;
     private Rigidbody heldRigidbody;
-    private Collider[] heldColliders; // NEW: Array to store the object's colliders
+    private int originalLayer;
+
+    private bool inputEnabled = true;
 
     private void Update()
     {
+        // Toggle input with Escape key
+        if (Keyboard.current.escapeKey.wasPressedThisFrame)
+        {
+            inputEnabled = !inputEnabled;
+        }
+
+        // Only process input if enabled
+        if (!inputEnabled)
+        {
+            return;
+        }
+
         if (Keyboard.current.eKey.wasPressedThisFrame)
         {
             if (heldObject == null) TryPickUp();
             else Drop();
+        }
+
+        // Delete held object (works with both Delete and Backspace keys)
+        if (heldObject != null && (Keyboard.current.deleteKey.wasPressedThisFrame || Keyboard.current.backspaceKey.wasPressedThisFrame))
+        {
+            DeleteHeldObject();
         }
 
         if (heldObject != null)
@@ -39,19 +60,24 @@ public class PlayerPickUpDrop : MonoBehaviour
             heldObject = hit.collider.gameObject;
             heldRigidbody = heldObject.GetComponent<Rigidbody>();
 
-            // NEW: Get all colliders on the object (and any child objects it might have)
-            heldColliders = heldObject.GetComponentsInChildren<Collider>();
+            // Store original layer
+            originalLayer = heldObject.layer;
 
             if (heldRigidbody != null)
             {
                 heldRigidbody.useGravity = false;
-                heldRigidbody.isKinematic = false;
+                heldRigidbody.isKinematic = true;
             }
 
-            // NEW: Disable all colliders so it passes through everything
-            foreach (Collider col in heldColliders)
+            // Change layer to HeldObject (collides with environment, not player)
+            int heldLayer = LayerMask.NameToLayer(heldObjectLayerName);
+            if (heldLayer != -1)
             {
-                col.enabled = false;
+                SetLayerRecursively(heldObject, heldLayer);
+            }
+            else
+            {
+                Debug.LogWarning($"Layer '{heldObjectLayerName}' does not exist. Object may collide with player.");
             }
         }
     }
@@ -67,6 +93,10 @@ public class PlayerPickUpDrop : MonoBehaviour
 
         Vector3 targetPos = playerCameraTransform.position + (playerCameraTransform.forward * currentTargetDistance);
         heldObject.transform.position = Vector3.Lerp(heldObject.transform.position, targetPos, Time.deltaTime * moveSpeed);
+
+        // Keep object level (only allow Y-axis rotation)
+        Vector3 currentEuler = heldObject.transform.eulerAngles;
+        heldObject.transform.rotation = Quaternion.Euler(0f, currentEuler.y, 0f);
     }
 
     private void HandleRotation()
@@ -88,17 +118,42 @@ public class PlayerPickUpDrop : MonoBehaviour
             heldRigidbody.isKinematic = false;
         }
 
-        // NEW: Re-enable all colliders so it behaves normally again
-        if (heldColliders != null)
-        {
-            foreach (Collider col in heldColliders)
-            {
-                col.enabled = true;
-            }
-        }
+        // Restore original layer
+        SetLayerRecursively(heldObject, originalLayer);
 
         heldObject = null;
         heldRigidbody = null;
-        heldColliders = null; // NEW: Clear the array
+    }
+
+    private void SetLayerRecursively(GameObject target, int layer)
+    {
+        target.layer = layer;
+        foreach (Transform child in target.transform)
+        {
+            SetLayerRecursively(child.gameObject, layer);
+        }
+    }
+
+    private void DeleteHeldObject()
+    {
+        if (heldObject == null) return;
+
+        // Disable all colliders
+        Collider[] colliders = heldObject.GetComponentsInChildren<Collider>();
+        foreach (Collider col in colliders)
+        {
+            col.enabled = false;
+        }
+
+        // Disable all renderers to make invisible
+        Renderer[] renderers = heldObject.GetComponentsInChildren<Renderer>();
+        foreach (Renderer renderer in renderers)
+        {
+            renderer.enabled = false;
+        }
+
+        // Clear held object references
+        heldObject = null;
+        heldRigidbody = null;
     }
 }

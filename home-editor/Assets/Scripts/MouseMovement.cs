@@ -9,6 +9,8 @@ public class MouseMovement : MonoBehaviour
     private Vector2 xyRotation;
     private InputAction lookAction;
 
+    private bool inputEnabled = true;
+
     private void Awake()
     {
         lookAction = new InputAction("Look", InputActionType.Value);
@@ -33,6 +35,20 @@ public class MouseMovement : MonoBehaviour
     private void Update()
     {
         if (playerCamera == null) return;
+
+        // Toggle input with Escape key
+        if (Keyboard.current.escapeKey.wasPressedThisFrame)
+        {
+            inputEnabled = !inputEnabled;
+            Cursor.lockState = inputEnabled ? CursorLockMode.Locked : CursorLockMode.None;
+            Cursor.visible = !inputEnabled;
+        }
+
+        // Only process input if enabled
+        if (!inputEnabled)
+        {
+            return;
+        }
 
         if (Mouse.current.leftButton.wasPressedThisFrame)
         {
