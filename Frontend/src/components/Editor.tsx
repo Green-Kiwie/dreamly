@@ -20,7 +20,7 @@ const Editor: React.FC = () => {
       const tag = (e.target as HTMLElement).tagName;
       if (tag === "INPUT" || tag === "TEXTAREA") {
         // Tell Unity to release keyboard capture via the KeyboardBridge GameObject
-        webglRef.sendMessage?.("KeyboardBridge", "InputDisable", "");
+        webglRef.sendMessage?.("Player", "InputDisable", "");
       }
     };
 
@@ -28,7 +28,7 @@ const Editor: React.FC = () => {
       const tag = (e.target as HTMLElement).tagName;
       if (tag === "INPUT" || tag === "TEXTAREA") {
         // Restore Unity keyboard capture when the input loses focus
-        webglRef.sendMessage?.("KeyboardBridge", "InputEnable", "");
+        webglRef.sendMessage?.("Player", "InputEnable", "");
       }
     };
 

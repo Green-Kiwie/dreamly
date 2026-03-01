@@ -105,7 +105,7 @@ const Navbar: React.FC = () => {
         }
 
         .dnav-logo-img {
-          height: 38px;
+          height: 53px;
           width: auto;
           object-fit: contain;
           display: block;
