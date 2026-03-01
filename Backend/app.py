@@ -12,16 +12,24 @@ def get_default_home():
         "message": "Welcome to the Furniture Store API"
     })
 
+# curl -X POST -H "Content-Type: application/json" -d @filename.json [API_ENDPOINT_URL]
 
 @app.route('/api/search', methods=['POST'])
 def search_furniture():
     data = request.get_json()
     text_query = get_search_text(data)
 
-    ikea_results = get_ikea_listings(text_query, 10)
-    homedepot_results = get_homedepot_listings(text_query)
+    ikea_results = get_ikea_listings(text_query, 5)
+    google_results = get_google_listings(text_query, 15)
 
-    return jsonify({'result': ikea_results})
+    final_results = google_results + ikea_results
+
+    with open("search_result_text.json", 'w') as file:
+        json.dump({"results": final_results}, file, indent=2)
+
+    print("Saved json test...")
+
+    return jsonify({'results': final_results})
 
 
 # 3. Furniture Object - Get details for a specific item by ID
