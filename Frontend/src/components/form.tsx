@@ -30,10 +30,10 @@ function Form() {
         const response = await fetch(`${import.meta.env.VITE_API_URL}/api/search`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.parse(`{
-                "image_b64": ${picture},
-                "text": ${name}
-                }`),
+            body: JSON.stringify({
+                "image_b64": picture,
+                "text": name
+                }),
         });
 
         const data = await response.json();
@@ -54,19 +54,17 @@ function Form() {
             console.log("Posting Error")
             console.log(e)
         }
-
-        console.log({ name });
-        console.log({ picture });
     };
 
     const postFurniture = async (image:string ) => {
-        const response = await fetch(`${import.meta.env.VITE_API_URL}/api/search`, {
+        const formData = new FormData();
+        formData.append('image', image);
+        formData.append('category', '');
+
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/api/furniture/generate`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.parse(`{
-                "image_b64": ${picture},
-                "text": ${name}
-                }`),
+            body: formData
         });
 
         const data = await response.json();
@@ -77,15 +75,14 @@ function Form() {
     const handleClick = async (image: string) => {
 
         try{
-            await postFurniture(image)
+            console.log("hi")
+            const result = await postFurniture(image)
+            webglRef.sendMessage?.('ModelManager', 'ModelLoader', result);
         }
         catch(e){
             console.log("Posting Error")
             console.log(e)
         }
-        
-
-        webglRef.sendMessage?.('GameObjectName', 'MethodName', 'data');
     };
 
     return (
