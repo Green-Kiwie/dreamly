@@ -1,3 +1,7 @@
+using System.ComponentModel;
+using System.Reflection;
+using System.Runtime.CompilerServices;
+using System.Security.AccessControl;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -47,6 +51,9 @@ public class MouseMovement : MonoBehaviour
     public void InputEnable(string _)
     {
         InputBlocked = false;
+        inputEnabled = true;
+        Cursor.lockState = CursorLockMode.Locked;
+        Cursor.visible = false;
 #if UNITY_WEBGL && !UNITY_EDITOR
         WebGLInput.captureAllKeyboardInput = true;
 #endif
