@@ -4,6 +4,7 @@ import trimesh
 import base64
 import subprocess
 import gc  
+import requests
 
 # 1. Verification Check
 print(f"CUDA Available: {torch.cuda.is_available()}")
@@ -121,9 +122,31 @@ def convert_mesh_to_glb_bytes(mesh):
     
     return glb_base64
     
-def generate_furniture():
+def download_image(url):
+    """
+    Downloads an image from a URL and returns the raw bytes.
+    """
+    try:
+        response = requests.get(url, timeout=10)
+        # Check if the request was successful (status code 200)
+        response.raise_for_status()
+        
+        # Check if the content is actually an image
+        if "image" not in response.headers.get("Content-Type", ""):
+            print(f"Warning: URL may not be an image. Type: {response.headers.get('Content-Type')}")
+            
+        return response.content
+    except Exception as e:
+        print(f"Error downloading image from {url}: {e}")
+        return None
+    
+def generate_furniture(image_url):
+    image_byte = download_image(image_url)
     geometry_mesh = make_3d_from_image(image_byte)
-    glb_obj = convert_mesh_to_glb_bytes(geometry_mesh)
+    obj_mesh = reduce_mesh_face(geometry_mesh)
+    reduced_mesh = texture_3d_mesh(obj_mesh, image_byte)
+
+    glb_obj = convert_mesh_to_glb_bytes(reduced_mesh)
     dimensions = get_obj_dimensions(obj_mesh)
     return glb_obj, dimensions
 
