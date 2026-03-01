@@ -20,6 +20,8 @@ def get_search_results(data):
 
     final_results = google_results + ikea_results
 
+    return final_results
+
 
 def get_search_text(data):
     base64_image = data.get('image_b64')
