@@ -10,6 +10,7 @@ public class MouseMovement : MonoBehaviour
     private InputAction lookAction;
 
     private bool inputEnabled = true;
+    public static bool InputBlocked = false;
 
     private void Awake()
     {
@@ -32,9 +33,44 @@ public class MouseMovement : MonoBehaviour
         Cursor.visible = true;
     }
 
+    public void InputDisable(string _)
+    {
+        InputBlocked = true;
+        inputEnabled = false;
+        Cursor.lockState = CursorLockMode.None;
+        Cursor.visible = true;
+#if UNITY_WEBGL && !UNITY_EDITOR
+        WebGLInput.captureAllKeyboardInput = false;
+#endif
+    }
+
+    public void InputEnable(string _)
+    {
+        InputBlocked = false;
+#if UNITY_WEBGL && !UNITY_EDITOR
+        WebGLInput.captureAllKeyboardInput = true;
+#endif
+    }
+
+    void OnApplicationFocus(bool hasFocus)
+    {
+        if (!hasFocus)
+        {
+#if UNITY_WEBGL && !UNITY_EDITOR
+            WebGLInput.captureAllKeyboardInput = false;
+#endif
+        }
+    }
+
     private void Update()
     {
         if (playerCamera == null) return;
+
+        // Don't process input if blocked by browser/HTML input
+        if (InputBlocked)
+        {
+            return;
+        }
 
         // Toggle input with Escape key
         if (Keyboard.current.escapeKey.wasPressedThisFrame)

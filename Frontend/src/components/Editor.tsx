@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useRef } from "react";
 import type { ChangeEvent } from "react";
 import { Unity, useUnityContext } from "react-unity-webgl";
 import Form from "./form";
@@ -6,6 +6,8 @@ import Form from "./form";
 export const webglRef = { sendMessage: null as any };
 
 const Editor: React.FC = () => {
+    const inputRef = useRef<HTMLInputElement>(null);
+
     // Define the Unity configuration with explicit paths
     const { unityProvider, loadingProgression, isLoaded, sendMessage } =
         useUnityContext({
@@ -22,6 +24,20 @@ const Editor: React.FC = () => {
         console.log("Editor: sendMessage ready:", !!sendMessage);
         console.log("Editor: isLoaded:", isLoaded);
     }, [isLoaded, sendMessage]);
+
+    const handleInputFocus = () => {
+        if (sendMessage) {
+            // Call InputDisable on MouseMovement GameObject
+            sendMessage("Player", "InputDisable", "");
+        }
+    };
+
+    const handleInputBlur = () => {
+        if (sendMessage) {
+            // Call InputEnable on MouseMovement GameObject
+            sendMessage("Player", "InputEnable", "");
+        }
+    };
 
     return (
         <div style={{ width: "80%", height: "50vh", position: "relative" }}>
@@ -49,6 +65,13 @@ const Editor: React.FC = () => {
             />
 
             <Form />
+            <input
+                ref={inputRef}
+                type="text"
+                placeholder="Search furniture..."
+                onFocus={handleInputFocus}
+                onBlur={handleInputBlur}
+            />
         </div>
     );
 };

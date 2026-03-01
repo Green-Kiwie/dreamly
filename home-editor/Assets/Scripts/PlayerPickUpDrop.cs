@@ -21,6 +21,12 @@ public class PlayerPickUpDrop : MonoBehaviour
 
     private void Update()
     {
+        // Don't process input if blocked by browser/HTML input
+        if (MouseMovement.InputBlocked)
+        {
+            return;
+        }
+
         // Toggle input with Escape key
         if (Keyboard.current.escapeKey.wasPressedThisFrame)
         {
