@@ -30,8 +30,8 @@ def search_furniture():
 @app.route('/api/furniture/generate', methods=['POST'])
 def process_furniture_data():
     # 1. Get the text data from the form
-    text_data = request.form.get('description', 'No description provided')
-    category = request.form.get('category', 'unknown')
+    # text_data = request.form.get('description', 'No description provided')
+    # category = request.form.get('category', 'unknown')
 
     # 2. Get the image from the request
     if 'image' not in request.files:
