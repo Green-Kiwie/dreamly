@@ -19,7 +19,7 @@ const Editor: React.FC = () => {
     webglRef.sendMessage = sendMessage;
 
     return (
-        <div style={{ width: "100%", height: "100vh", position: "relative" }}>
+        <div style={{ width: "100%", height: "100vh", position: "relative", display: "flex" }}>
             {/* Overlay Loader */}
             {!isLoaded && (
                 <div
@@ -40,7 +40,7 @@ const Editor: React.FC = () => {
 
             <Unity
                 unityProvider={unityProvider}
-                style={{ width: "100%", height: "100%" }}
+                style={{ width: "75%", height: "75%" }}
             />
 
             <Form />
