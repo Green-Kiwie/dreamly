@@ -88,17 +88,6 @@ function Form() {
             <div id="formWrapper">
                 <form id="form" onSubmit={handleSubmit}>
                     <input
-                        value={name}
-                        onChange={(e) => setName(e.target.value)}
-                        id="search"
-                        placeholder="Start searching for furniture"
-                    />
-                    <input
-                        type="file"
-                        accept="image/*"
-                        onChange={handleImageChange}
-                    />
-                    <input
                         type="file"
                         accept=".glb"
                         onChange={handleGLBChange}
