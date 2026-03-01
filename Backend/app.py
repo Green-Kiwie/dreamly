@@ -1,5 +1,5 @@
 from flask import Flask, jsonify, request
-from search_furniture import * 
+from search_furniture import get_search_results
 from get_furniture_object import generate_furniture
 
 app = Flask(__name__)
@@ -27,17 +27,14 @@ def process_furniture_data():
     # 1. Get the text data from the form
     # text_data = request.form.get('description', 'No description provided')
     # category = request.form.get('category', 'unknown')
+    image_url = request.form.get('image_url') or None
 
     # 2. Get the image from the request
-    if 'image' not in request.files:
-        return jsonify({"error": "No image uploaded"}), 400
-    
-    image_file = request.files['image']
-
+    image_file = request.files['image'] or None
     img_bytes = image_file.read()
 
     try:
-        glb_bytes, dimensions = generate_furniture(img_bytes)
+        glb_bytes, dimensions = generate_furniture(image_url, img_bytes)
 
         return jsonify({
             "status": "success",
@@ -48,5 +45,6 @@ def process_furniture_data():
                 "unit": "meters"
             }
         })
+
     except Exception as e:
         return jsonify({"error": f"Processing failed: {str(e)}"}), 500

@@ -18,23 +18,6 @@ import io
 
 model_path = 'tencent/Hunyuan3D-2'
 
-def run_paint3d_api(mesh_path, prompt):
-    # This command tells WSL to:
-    # 1. Use the specific Python inside your conda environment
-    # 2. Run the Paint3D script with your arguments
-    conda_python = "/home/youruser/miniconda3/envs/paint3d/bin/python"
-    script_path = "/path/to/Paint3D/scripts/run_paint3d.py"
-    
-    cmd = [
-        conda_python, script_path,
-        "--mesh_path", mesh_path,
-        "--prompt", prompt,
-        "--output_dir", "outputs/api_results"
-    ]
-    
-    result = subprocess.run(cmd, capture_output=True, text=True)
-    return result.stdout
-
 def make_3d_from_image(image_bytes):
     # --- STEP 1: Process Image & Background ---
     image = Image.open(io.BytesIO(image_bytes)).convert("RGBA")
@@ -140,8 +123,9 @@ def download_image(url):
         print(f"Error downloading image from {url}: {e}")
         return None
     
-def generate_furniture(image_url):
-    image_byte = download_image(image_url)
+def generate_furniture(image_url, image_byte):
+    if image_url != None:
+        image_byte = download_image(image_url)
     geometry_mesh = make_3d_from_image(image_byte)
     obj_mesh = reduce_mesh_face(geometry_mesh)
     reduced_mesh = texture_3d_mesh(obj_mesh, image_byte)
