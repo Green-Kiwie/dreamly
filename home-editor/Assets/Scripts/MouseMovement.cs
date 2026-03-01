@@ -1,7 +1,3 @@
-using System.ComponentModel;
-using System.Reflection;
-using System.Runtime.CompilerServices;
-using System.Security.AccessControl;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -12,9 +8,9 @@ public class MouseMovement : MonoBehaviour
 
     private Vector2 xyRotation;
     private InputAction lookAction;
-
     private bool inputEnabled = true;
     public static bool InputBlocked = false;
+    private bool pendingLockRequest = false;
 
     private void Awake()
     {
@@ -26,23 +22,25 @@ public class MouseMovement : MonoBehaviour
     private void OnEnable()
     {
         lookAction.Enable();
-        Cursor.lockState = CursorLockMode.Locked;
-        Cursor.visible = false;
+        if (!InputBlocked)
+        {
+            RequestCursorLock();
+        }
     }
 
     private void OnDisable()
     {
         lookAction.Disable();
-        Cursor.lockState = CursorLockMode.None;
-        Cursor.visible = true;
+        ReleaseCursorLock();
     }
 
     public void InputDisable(string _)
     {
         InputBlocked = true;
         inputEnabled = false;
-        Cursor.lockState = CursorLockMode.None;
-        Cursor.visible = true;
+        pendingLockRequest = false;
+        ReleaseCursorLock();
+
 #if UNITY_WEBGL && !UNITY_EDITOR
         WebGLInput.captureAllKeyboardInput = false;
 #endif
@@ -52,20 +50,33 @@ public class MouseMovement : MonoBehaviour
     {
         InputBlocked = false;
         inputEnabled = true;
-        Cursor.lockState = CursorLockMode.Locked;
-        Cursor.visible = false;
+
 #if UNITY_WEBGL && !UNITY_EDITOR
+        pendingLockRequest = true;
         WebGLInput.captureAllKeyboardInput = true;
+#else
+        RequestCursorLock();
 #endif
     }
 
-    void OnApplicationFocus(bool hasFocus)
+    private void OnApplicationFocus(bool hasFocus)
     {
-        if (!hasFocus)
+        if (hasFocus)
+        {
+#if UNITY_WEBGL && !UNITY_EDITOR
+            WebGLInput.captureAllKeyboardInput = inputEnabled && !InputBlocked;
+#endif
+            if (inputEnabled && !InputBlocked)
+            {
+                pendingLockRequest = true;
+            }
+        }
+        else
         {
 #if UNITY_WEBGL && !UNITY_EDITOR
             WebGLInput.captureAllKeyboardInput = false;
 #endif
+            ReleaseCursorLock();
         }
     }
 
@@ -73,36 +84,35 @@ public class MouseMovement : MonoBehaviour
     {
         if (playerCamera == null) return;
 
-        // Don't process input if blocked by browser/HTML input
-        if (InputBlocked)
-        {
-            return;
-        }
+        if (InputBlocked) return;
 
-        // Toggle input with Escape key
-        if (Keyboard.current.escapeKey.wasPressedThisFrame)
+        if (Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame)
         {
             inputEnabled = !inputEnabled;
-            Cursor.lockState = inputEnabled ? CursorLockMode.Locked : CursorLockMode.None;
-            Cursor.visible = !inputEnabled;
+            if (inputEnabled)
+            {
+                pendingLockRequest = true;
+            }
+            else
+            {
+                ReleaseCursorLock();
+            }
         }
 
-        // Only process input if enabled
-        if (!inputEnabled)
-        {
-            return;
-        }
+        if (!inputEnabled) return;
 
-        if (Mouse.current.leftButton.wasPressedThisFrame)
+        if (Mouse.current != null && Mouse.current.leftButton.wasPressedThisFrame)
         {
-            Cursor.lockState = CursorLockMode.Locked;
-            Cursor.visible = false;
+            if (pendingLockRequest)
+            {
+                RequestCursorLock();
+                pendingLockRequest = false;
+            }
         }
 
         if (Cursor.lockState == CursorLockMode.Locked)
         {
             Vector2 mouseInput = lookAction.ReadValue<Vector2>();
-
             xyRotation.x -= mouseInput.y * sensitivities.y;
             xyRotation.y += mouseInput.x * sensitivities.x;
             xyRotation.x = Mathf.Clamp(xyRotation.x, -90f, 90f);
@@ -110,5 +120,17 @@ public class MouseMovement : MonoBehaviour
             transform.localRotation = Quaternion.Euler(0f, xyRotation.y, 0f);
             playerCamera.localRotation = Quaternion.Euler(xyRotation.x, 0f, 0f);
         }
+    }
+
+    private void RequestCursorLock()
+    {
+        Cursor.lockState = CursorLockMode.Locked;
+        Cursor.visible = false;
+    }
+
+    private void ReleaseCursorLock()
+    {
+        Cursor.lockState = CursorLockMode.None;
+        Cursor.visible = true;
     }
 }
