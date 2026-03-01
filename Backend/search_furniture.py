@@ -11,6 +11,16 @@ load_dotenv()
 GEMINI_API_KEY = os.environ.get('GEMINI_API_KEY')
 SERPAPI_KEY = os.environ.get('SERPAPI_KEY')
 
+
+def get_search_results(data):
+    text_query = get_search_text(data)
+
+    ikea_results = get_ikea_listings(text_query, 5)
+    google_results = get_google_listings(text_query, 15)
+
+    final_results = google_results + ikea_results
+
+
 def get_search_text(data):
     base64_image = data.get('image_b64')
 
