@@ -32,18 +32,24 @@ public class MouseMovement : MonoBehaviour
 
     private void Update()
     {
-        if (playerCamera == null)
+        if (playerCamera == null) return;
+
+        if (Mouse.current.leftButton.wasPressedThisFrame)
         {
-            return;
+            Cursor.lockState = CursorLockMode.Locked;
+            Cursor.visible = false;
         }
 
-        Vector2 mouseInput = lookAction.ReadValue<Vector2>();
+        if (Cursor.lockState == CursorLockMode.Locked)
+        {
+            Vector2 mouseInput = lookAction.ReadValue<Vector2>();
 
-        xyRotation.x -= mouseInput.y * sensitivities.y;
-        xyRotation.y += mouseInput.x * sensitivities.x;
-        xyRotation.x = Mathf.Clamp(xyRotation.x, -90f, 90f);
+            xyRotation.x -= mouseInput.y * sensitivities.y;
+            xyRotation.y += mouseInput.x * sensitivities.x;
+            xyRotation.x = Mathf.Clamp(xyRotation.x, -90f, 90f);
 
-        transform.localRotation = Quaternion.Euler(0f, xyRotation.y, 0f);
-        playerCamera.localRotation = Quaternion.Euler(xyRotation.x, 0f, 0f);
+            transform.localRotation = Quaternion.Euler(0f, xyRotation.y, 0f);
+            playerCamera.localRotation = Quaternion.Euler(xyRotation.x, 0f, 0f);
+        }
     }
 }
