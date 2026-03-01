@@ -103,9 +103,14 @@ export default function Form() {
         { method: "POST", body: formData, headers: { "ngrok-skip-browser-warning": "true" } }
       );
       if (!response.ok) throw new Error(`Server error: ${response.status}`);
-      const data = await response.json();
+      // Read raw GLB binary and convert to base64 (loop avoids call-stack overflow on large files)
+      const buffer = await response.arrayBuffer();
+      const bytes = new Uint8Array(buffer);
+      let binary = "";
+      for (let i = 0; i < bytes.byteLength; i++) binary += String.fromCharCode(bytes[i]);
+      const model_base64 = btoa(binary);
       // Hand the generated GLB to Unity
-      webglRef.sendMessage?.("ModelManager", "LoadGLB", data.model_base64);
+      webglRef.sendMessage?.("ModelManager", "LoadGLB", model_base64);
     } catch (err: any) {
       console.error("Generate error:", err);
       setError("Generation failed. Please try again.");
@@ -127,7 +132,7 @@ export default function Form() {
     if (item.name === "Mainstays Microfiber Tub Accent Chair Berry Red") {
       blob = new Blob([]);
       formData = new FormData();
-      formData.append("image", blob, "rodin_base_basic_pbr.glb" || "upload.png");
+      formData.append("image", blob, "rodin_base_basic_pbr.glb");
     } else {
       blob = await (await fetch(item.image)).blob();
       formData = new FormData();
@@ -139,9 +144,14 @@ export default function Form() {
       { method: "POST", body: formData, headers: { "ngrok-skip-browser-warning": "true" } }
     );
     if (!response.ok) throw new Error(`Server error: ${response.status}`);
-    const data = await response.json();
+    // Read raw GLB binary and convert to base64 (loop avoids call-stack overflow on large files)
+    const buffer = await response.arrayBuffer();
+    const bytes = new Uint8Array(buffer);
+    let binary = "";
+    for (let i = 0; i < bytes.byteLength; i++) binary += String.fromCharCode(bytes[i]);
+    const model_base64 = btoa(binary);
     // Hand the generated GLB to Unity
-    webglRef.sendMessage?.("ModelManager", "LoadGLB", data.model_base64);
+    webglRef.sendMessage?.("ModelManager", "LoadGLB", model_base64);
   };
 
   const isImageMode = !!picture;
