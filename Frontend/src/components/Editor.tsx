@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import type { ChangeEvent } from "react";
 import { Unity, useUnityContext } from "react-unity-webgl";
 import Form from "./form";
@@ -18,8 +18,13 @@ const Editor: React.FC = () => {
     // Store sendMessage so other files can access it
     webglRef.sendMessage = sendMessage;
 
+    useEffect(() => {
+        console.log("Editor: sendMessage ready:", !!sendMessage);
+        console.log("Editor: isLoaded:", isLoaded);
+    }, [isLoaded, sendMessage]);
+
     return (
-        <div style={{ width: "100%", height: "100vh", position: "relative" }}>
+        <div style={{ width: "80%", height: "50vh", position: "relative" }}>
             {/* Overlay Loader */}
             {!isLoaded && (
                 <div

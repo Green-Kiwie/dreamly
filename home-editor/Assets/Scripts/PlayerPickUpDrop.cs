@@ -38,14 +38,14 @@ public class PlayerPickUpDrop : MonoBehaviour
         {
             heldObject = hit.collider.gameObject;
             heldRigidbody = heldObject.GetComponent<Rigidbody>();
-            
+
             // NEW: Get all colliders on the object (and any child objects it might have)
             heldColliders = heldObject.GetComponentsInChildren<Collider>();
 
             if (heldRigidbody != null)
             {
                 heldRigidbody.useGravity = false;
-                heldRigidbody.isKinematic = true;
+                heldRigidbody.isKinematic = false;
             }
 
             // NEW: Disable all colliders so it passes through everything
@@ -84,7 +84,7 @@ public class PlayerPickUpDrop : MonoBehaviour
 
         if (heldRigidbody != null)
         {
-            heldRigidbody.useGravity = true;
+            heldRigidbody.useGravity = false;
             heldRigidbody.isKinematic = false;
         }
 
