@@ -11,6 +11,18 @@ load_dotenv()
 GEMINI_API_KEY = os.environ.get('GEMINI_API_KEY')
 SERPAPI_KEY = os.environ.get('SERPAPI_KEY')
 
+
+def get_search_results(data):
+    text_query = get_search_text(data)
+
+    ikea_results = get_ikea_listings(text_query, 5)
+    google_results = get_google_listings(text_query, 15)
+
+    final_results = google_results + ikea_results
+
+    return final_results
+
+
 def get_search_text(data):
     base64_image = data.get('image_b64')
 
@@ -67,8 +79,7 @@ def get_google_listings(text_query, k):
 
         results.append({
             "name": product.get("title"),
-            "price": product.get("extracted_price"),   # float, easier to work with than string
-            "price_str": product.get("price"),          # formatted string e.g. "$199.99"
+            "price": product.get("extracted_price"),
             "link": link,
             "image": product.get("thumbnail"),
             "id": product.get("product_id"),
