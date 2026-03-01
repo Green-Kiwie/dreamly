@@ -3,14 +3,13 @@ import base64
 from dotenv import load_dotenv
 from google import genai
 import ikea_api
-from curl_cffi import requests
+import json
+import requests as req
 from google.genai import types
 
 load_dotenv()
 GEMINI_API_KEY = os.environ.get('GEMINI_API_KEY')
-
-# 2. Furniture Search
-# Example: /api/search?q=Chair
+SERPAPI_KEY = os.environ.get('SERPAPI_KEY')
 
 def get_search_text(data):
     base64_image = data.get('image_b64')
@@ -36,74 +35,52 @@ def get_search_text(data):
     return text_query
 
 
-def get_lowes_listings():
-    pass
+def get_google_listings(text_query, k):
+    print(f"Searching '{text_query}' from Google Shopping...")
 
+    response = req.get("https://serpapi.com/search.json", params={
+        "engine": "google_shopping",
+        "q": text_query,
+        "api_key": SERPAPI_KEY,
+        "num": k,
+        "gl": "us",
+        "hl": "en",
+    })
 
-def get_homedepo_listings(text_query, k):
-    url = "https://apionline.homedepot.com/federation-gateway/graphql?opname=plaModel"
-
-    gql_query = """
-    query plaModel($keyword: String, $pageSize: Int) {
-      plaModel(keyword: $keyword, pageSize: $pageSize) {
-        products {
-          itemId
-          identifiers {
-            productLabel
-            brandName
-            canonicalUrl
-          }
-          pricing {
-            value
-          }
-          media {
-            images {
-              url
-            }
-          }
-        }
-      }
-    }
-    """
-
-    headers = {
-        "Content-Type": "application/json",
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-    }
-    
-    payload = {
-        "operationName": "plaModel",
-        "variables": {
-            "keyword": text_query,
-            "pageSize": k
-        },
-        "query": gql_query
-    }
-
-    print(f"Searching for '{text_query}'...")
-    response = requests.post(url, json=payload, headers=headers, impersonate="chrome120")
-    
     if response.status_code != 200:
-        print(f"Error: Received status {response.status_code}")
+        print(f"Error: {response.status_code}")
+        print(response.text[:300])
         return []
 
     data = response.json()
-    products = data.get('data', {}).get('plaModel', {}).get('products', [])
-    
+    shopping_results = data.get("shopping_results", [])
+
+    if not shopping_results:
+        print("No results found:", data.get("error", "unknown error"))
+        return []
+
     results = []
-    for product in products:
+    for product in shopping_results[:k]:
+        # multiple_sources[0].link is the direct retailer URL when available
+        # fall back to product_link (Google's product page) if not
+        link = product.get("product_link") or product.get("link")
+
         results.append({
-            "name": product['identifiers']['productLabel'],
-            "price": product['pricing']['value'],
-            "link": f"https://www.homedepot.com{product['identifiers']['canonicalUrl']}",
-            "image": product['media']['images'][0]['url'].replace('<SIZE>', '1000'),
-            "id": product['itemId'],
+            "name": product.get("title"),
+            "price": product.get("extracted_price"),   # float, easier to work with than string
+            "price_str": product.get("price"),          # formatted string e.g. "$199.99"
+            "link": link,
+            "image": product.get("thumbnail"),
+            "id": product.get("product_id"),
+            "from": product.get("source")
         })
-    
+
+    print(f"Found {len(results)} results from Google Shopping")
     return results
 
 
 def get_ikea_listings(text_query, k):
+    print(f'Searching "{text_query}" from IKEA....')
     constants = ikea_api.Constants(
         country='us', 
         language='en',
@@ -129,7 +106,10 @@ def get_ikea_listings(text_query, k):
             'price': product['salesPrice']['numeral'],
             'link': product['pipUrl'],
             'image': product['mainImageUrl'],
-            'id': product['itemNoGlobal']
+            'id': product['itemNoGlobal'],
+            'from': 'IKEA'
         })
+
+    print(f'Found {len(listings)} from IKEA')
     
     return listings
