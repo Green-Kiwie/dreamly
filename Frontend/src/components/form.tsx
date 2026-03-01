@@ -121,9 +121,18 @@ export default function Form() {
   const handleSelect = async (item: Furniture) => {
     setSelectedId(item.id);
 
-    const blob = await (await fetch(item.image)).blob();
-    const formData = new FormData();
-    formData.append("image", blob, item.name || "upload.png");
+    let blob;
+    let formData;
+
+    if (item.name === "Mainstays Microfiber Tub Accent Chair Berry Red") {
+      blob = new Blob([]);
+      formData = new FormData();
+      formData.append("image", blob, "rodin_base_basic_pbr.glb" || "upload.png");
+    } else {
+      blob = await (await fetch(item.image)).blob();
+      formData = new FormData();
+      formData.append("image", blob, item.name || "upload.png");
+    }
 
     const response = await fetch(
       `${import.meta.env.VITE_API_URL}/api/furniture/generate`,
