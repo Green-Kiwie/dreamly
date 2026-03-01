@@ -1,4 +1,5 @@
 /venv
+.env
 
 /[Hh]ome-editor/[Ll]ibrary/
 /[Hh]ome-editor/[Tt]emp/
