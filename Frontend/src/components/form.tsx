@@ -2,22 +2,22 @@ import { useState, useRef } from "react";
 import { webglRef } from "./Editor";
 
 interface Furniture {
-  name:  string;
+  name: string;
   price: number;
-  link:  string;
+  link: string;
   image: string;
-  id:    string;
-  from:  string;
+  id: string;
+  from: string;
 }
 
 export default function Form() {
-  const [query,      setQuery]      = useState("");
-  const [picture,    setPicture]    = useState("");      // base64 data URL
-  const [fileName,   setFileName]   = useState("");
+  const [query, setQuery] = useState("");
+  const [picture, setPicture] = useState("");      // base64 data URL
+  const [fileName, setFileName] = useState("");
   const [isDragging, setIsDragging] = useState(false);
-  const [results,    setResults]    = useState<Furniture[]>([]);
-  const [loading,    setLoading]    = useState<"search" | "generate" | null>(null);
-  const [error,      setError]      = useState("");
+  const [results, setResults] = useState<Furniture[]>([]);
+  const [loading, setLoading] = useState<"search" | "generate" | null>(null);
+  const [error, setError] = useState("");
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
@@ -61,15 +61,19 @@ export default function Form() {
   // ── Search (text or image → /api/search) ────────────────────────
   const runSearch = async () => {
     if (!query && !picture) return;
+    console.log(query, picture)
     setLoading("search");
     setError("");
     try {
       const response = await fetch(`${import.meta.env.VITE_API_URL}/api/search`, {
-        method:  "POST",
-        headers: { "Content-Type": "application/json" },
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "ngrok-skip-browser-warning": "true"
+        },
         body: JSON.stringify({
           image_b64: picture || null,
-          text:      query   || null,
+          text: query || null,
         }),
       });
       if (!response.ok) throw new Error(`Server error: ${response.status}`);
@@ -90,18 +94,18 @@ export default function Form() {
     setError("");
     try {
       // The generate endpoint expects multipart/form-data with an image file
-      const blob      = await (await fetch(picture)).blob();
-      const formData  = new FormData();
+      const blob = await (await fetch(picture)).blob();
+      const formData = new FormData();
       formData.append("image", blob, fileName || "upload.png");
 
       const response = await fetch(
         `${import.meta.env.VITE_API_URL}/api/furniture/generate`,
-        { method: "POST", body: formData }
+        { method: "POST", body: formData, headers: { "ngrok-skip-browser-warning": "true" } }
       );
       if (!response.ok) throw new Error(`Server error: ${response.status}`);
       const data = await response.json();
       // Hand the generated GLB to Unity
-      webglRef.sendMessage?.("FurnitureManager", "LoadGeneratedModel", data.model_base64);
+      webglRef.sendMessage?.("ModelManager", "LoadGLB", data.model_base64);
     } catch (err: any) {
       console.error("Generate error:", err);
       setError("Generation failed. Please try again.");
@@ -114,9 +118,21 @@ export default function Form() {
     if (e.key === "Enter") runSearch();
   };
 
-  const handleSelect = (item: Furniture) => {
+  const handleSelect = async (item: Furniture) => {
     setSelectedId(item.id);
-    webglRef.sendMessage?.("FurnitureManager", "SelectFurniture", item.name);
+
+    const blob = await (await fetch(item.image)).blob();
+    const formData = new FormData();
+    formData.append("image", blob, item.name || "upload.png");
+
+    const response = await fetch(
+      `${import.meta.env.VITE_API_URL}/api/furniture/generate`,
+      { method: "POST", body: formData, headers: { "ngrok-skip-browser-warning": "true" } }
+    );
+    if (!response.ok) throw new Error(`Server error: ${response.status}`);
+    const data = await response.json();
+    // Hand the generated GLB to Unity
+    webglRef.sendMessage?.("ModelManager", "LoadGLB", data.model_base64);
   };
 
   const isImageMode = !!picture;
