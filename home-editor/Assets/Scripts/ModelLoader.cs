@@ -3,10 +3,15 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using GLTFast;
+using GLTFast.Materials;
 
 public class ModelLoader : MonoBehaviour
 {
     private List<GameObject> loadedModels = new List<GameObject>();
+
+    [Header("Spawn Settings")]
+    [SerializeField] private Transform handLocation;
+    [SerializeField] private string spawnedModelLayerName = "holdLayer";
 
     public void LoadGLB(string base64String)
     {
@@ -30,26 +35,28 @@ public class ModelLoader : MonoBehaviour
 
     private IEnumerator LoadGLBCoroutine(byte[] glbData)
     {
-        Debug.Log($"1");
-        // Calculate position offset for new model
-        float xOffset = loadedModels.Count * 3f;
-        Debug.Log($"2");
         // Create container for loaded model
         GameObject loadedModel = new GameObject("LoadedGLBModel_" + loadedModels.Count);
-        Debug.Log($"3");
         loadedModel.transform.SetParent(transform);
-        Debug.Log($"4");
-        loadedModel.transform.position = new Vector3(xOffset, 0, 0);
-        Debug.Log($"5");
-        loadedModel.transform.rotation = Quaternion.identity;
-        Debug.Log($"6");
-        // Load GLB using GLTFast
-        GltfImport gltfImport = new GltfImport();
-        Debug.Log($"7");
-        var loadTask = gltfImport.LoadGltfBinary(glbData);
-        Debug.Log($"8");
+
+        // Set position to hand location if assigned, otherwise default position
+        if (handLocation != null)
+        {
+            loadedModel.transform.SetPositionAndRotation(handLocation.position, handLocation.rotation);
+        }
+        else
+        {
+            loadedModel.transform.position = new Vector3(0, 1, 0);
+            loadedModel.transform.rotation = Quaternion.identity;
+        }
+
+        // Load GLB using GLTFast with Built-In RP material generator
+        var materialGenerator = new BuiltInMaterialGenerator();
+        GltfImport gltfImport = new GltfImport(materialGenerator: materialGenerator);
+
+        var loadTask = gltfImport.Load(glbData, new Uri("http://localhost/"));
         yield return new WaitUntil(() => loadTask.IsCompleted);
-        Debug.Log($"9");
+
         if (loadTask.IsCanceled)
         {
             Debug.LogError("GLB load task was canceled.");
@@ -65,11 +72,40 @@ public class ModelLoader : MonoBehaviour
         }
 
         bool loadSuccess = loadTask.Result;
-        Debug.Log($"10");
+
         if (loadSuccess)
         {
-            yield return gltfImport.InstantiateMainSceneAsync(loadedModel.transform);
-            Debug.Log($"GLB #{loadedModels.Count} loaded at ({xOffset}, 0, 0)");
+            // Wait for the instantiation task to finish so materials generate correctly
+            var instantiateTask = gltfImport.InstantiateMainSceneAsync(loadedModel.transform);
+            yield return new WaitUntil(() => instantiateTask.IsCompleted);
+
+            if (instantiateTask.Result)
+            {
+                // Add Rigidbody with gravity disabled
+                Rigidbody rb = loadedModel.AddComponent<Rigidbody>();
+                rb.useGravity = false;
+                rb.isKinematic = true;
+
+                // Apply layer recursively
+                int spawnedLayer = LayerMask.NameToLayer(spawnedModelLayerName);
+                if (spawnedLayer == -1)
+                {
+                    Debug.LogWarning($"Layer '{spawnedModelLayerName}' does not exist. Model kept on default layer.");
+                }
+                else
+                {
+                    SetLayerRecursively(loadedModel, spawnedLayer);
+                }
+
+                // Add colliders to all meshes
+                AddCollidersToModel(loadedModel);
+
+                Debug.Log($"GLB #{loadedModels.Count} loaded at {loadedModel.transform.position} on layer '{spawnedModelLayerName}'");
+            }
+            else
+            {
+                Debug.LogError("Failed to instantiate the GLB scene.");
+            }
         }
         else
         {
@@ -87,5 +123,28 @@ public class ModelLoader : MonoBehaviour
         }
         loadedModels.Clear();
         Debug.Log("All models cleared");
+    }
+
+    private void SetLayerRecursively(GameObject target, int layer)
+    {
+        target.layer = layer;
+        foreach (Transform child in target.transform)
+        {
+            SetLayerRecursively(child.gameObject, layer);
+        }
+    }
+
+    private void AddCollidersToModel(GameObject model)
+    {
+        MeshRenderer[] renderers = model.GetComponentsInChildren<MeshRenderer>();
+        foreach (MeshRenderer renderer in renderers)
+        {
+            MeshFilter meshFilter = renderer.GetComponent<MeshFilter>();
+            if (meshFilter != null && meshFilter.sharedMesh != null)
+            {
+                MeshCollider collider = renderer.gameObject.AddComponent<MeshCollider>();
+                collider.convex = true;
+            }
+        }
     }
 }
