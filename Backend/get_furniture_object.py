@@ -1,4 +1,4 @@
-import torch
+# import torch
 from PIL import Image
 import trimesh
 import base64
@@ -7,6 +7,7 @@ import gc
 import requests
 import os
 from pathlib import Path
+import io
 
 # 1. Verification Check
 # print(f"CUDA Available: {torch.cuda.is_available()}")
@@ -186,10 +187,11 @@ def return_cache(image_url):
 
     # rglob("*") finds all files recursively
     for path in current_dir.rglob("*"):
+        # print("checking", path)
         if path.is_file():
             # Check if full name matches OR if name without extension matches
-            if path.name.lower() == image_url.lower() or \
-               path.stem.lower() == image_url.lower():
+            if path.name == image_url or \
+               path.stem== image_url:
                 return str(path.absolute())
                 
                 
@@ -214,20 +216,20 @@ def generate_furniture(image_url, image_byte):
 
     return obj_mesh, dimensions
 
-if __name__ == "__main__":
-    print("starting main now")
-    image_byte = get_image_bytes_from_file("furniture_files/chair.png")
+# if __name__ == "__main__":
+#     print("starting main now")
+#     image_byte = get_image_bytes_from_file("furniture_files/chair.png")
     
-    obj_mesh = make_3d_from_image(image_byte)
-    obj_mesh = reduce_mesh_face(obj_mesh)
-    obj_mesh = texture_3d_mesh(obj_mesh, image_byte)
+#     # obj_mesh = make_3d_from_image(image_byte)
+#     # obj_mesh = reduce_mesh_face(obj_mesh)
+#     # obj_mesh = texture_3d_mesh(obj_mesh, image_byte)
     
-    size = get_obj_dimensions(obj_mesh)
+#     size = get_obj_dimensions(obj_mesh)
 
-    obj_mesh.export('chair_test_pipeline1.glb')
+#     obj_mesh.export('chair_test_pipeline1.glb')
 
-    mesh = trimesh.load("chair_test_pipeline1.glb", force="mesh")
-    mesh.export("chair_test_pipeline1.obj", include_texture=True)
-    print(size)
+#     mesh = trimesh.load("chair_test_pipeline1.glb", force="mesh")
+#     mesh.export("chair_test_pipeline1.obj", include_texture=True)
+#     print(size)
     
 

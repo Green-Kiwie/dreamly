@@ -1,9 +1,10 @@
 from flask import Flask, jsonify, request
 from search_furniture import get_search_results
-# from get_furniture_object import generate_furniture
+from get_furniture_object import generate_furniture
 from flask_cors import CORS
 import threading
 from pyngrok import ngrok
+import io
 app = Flask(__name__)
 CORS(app)
 
@@ -24,7 +25,7 @@ def get_default_home():
 def search_furniture():
     return jsonify({'results': get_search_results(request.json)})
 
-'''
+
 # 3. Furniture Object - Get details for a specific item by ID
 # Example: /api/furniture/1
 @app.route('/api/furniture/generate', methods=['POST'])
@@ -44,26 +45,19 @@ def process_furniture_data():
         image_file = request.files['image'] or None
         img_bytes = image_file.read()
 
-        glb_bytes, dimensions = generate_furniture(image_url, img_bytes)
+        obj_mesh, dimensions = generate_furniture(image_url, img_bytes)
 
-        return jsonify({
-            "status": "success",
-            "model_base64": glb_bytes,
-            "metadata": {
-                "dimensions": dimensions,
-                "format": "glb",
-                "unit": "meters"
-            }
-        })
+        export_buffer = io.BytesIO()
+        obj_mesh.export(export_buffer, file_type='glb')
+        glb_bytes = export_buffer.getvalue()
+
+        return glb_bytes, dimensions
 
     except Exception as e:
         print("error: ", str(e))
         return jsonify({"error": f"Processing failed: {str(e)}"}), 500
 
-    finally:
-        processing_lock.release()
-    
-'''
+
 if __name__ == '__main__':
     public_url = ngrok.connect(5000)
     print(public_url)
