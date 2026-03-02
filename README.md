@@ -17,7 +17,7 @@ The backend connects to external APIs to access and process furniture data. Text
 **Backend: 2D to 3D model**
 We utilize Tencent’s 6 month old HunYuan 3D-2 AI model then generates high-definition 3D objects from 2D images. We ran Tencent's new model locally using a RTX 3060 GPU as it is not commercially available. Within minutes, we can generate accurately scaled, textured, and colored models to a precision of 500,000 faces. The objects are rendered as a .blg file which is then imported into the Unity WebGL environment for rendering within the 3D world.
 
-##Challenges we ran into
+## Challenges we ran into
 **Frontend Challenges**
 One major challenge was embedding a Unity game into a web app using WebGL for the first time. We experienced significant difficulty managing and desynchronizing inputs between the embedded Unity game and the surrounding website interface, which required careful debugging and coordination between systems.
 
@@ -37,3 +37,4 @@ Throughout this project, we learned how to integrate WebGL-based Unity builds in
 ## What's next for Dreamly
 
 Next, we plan to expand Dreamly into a fully immersive VR experience, allowing users to step inside and explore their dream home in real time. As Dreamly is built using Unity, porting over from a website to a VR software can be done quickly. We also aim to add home layout scanning so users can import the structure of their home into the platform, instead of relying on other software to generate the home environment. To enhance usability, we will introduce features like an inventory system, quick furniture placement, a more intuitive interface, and fast navigation for larger virtual spaces.
+
