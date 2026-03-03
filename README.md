@@ -1,4 +1,4 @@
-# Dreamly
+# Dreamly 🏠
 ## Inspiration
 
 Dreamly was inspired by real estate marketing companies like CoreLogic, Matterport, and CloudPano that use 3D modeling to showcase properties. We wanted to take this a step further. Instead of just viewing spaces, we allow prospective buyers to furnish their dream homes in a realistic 3D virtual world, with 3D objects accurately AI generated from pictures on their phone or from the web.
@@ -37,4 +37,5 @@ Throughout this project, we learned how to integrate WebGL-based Unity builds in
 ## What's next for Dreamly
 
 Next, we plan to expand Dreamly into a fully immersive VR experience, allowing users to step inside and explore their dream home in real time. As Dreamly is built using Unity, porting over from a website to a VR software can be done quickly. We also aim to add home layout scanning so users can import the structure of their home into the platform, instead of relying on other software to generate the home environment. To enhance usability, we will introduce features like an inventory system, quick furniture placement, a more intuitive interface, and fast navigation for larger virtual spaces.
+
 
