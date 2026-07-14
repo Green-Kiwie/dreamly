@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { webglRef } from "./Editor";
 import './Form.css'
-import data from "./search_result_text.json";
 
 function Form() {
     interface Furniture{
@@ -60,7 +59,7 @@ function Form() {
         console.log({ picture });
     };
 
-    const postFurniture = async (image:string ) => {
+    const postFurniture = async () => {
         const response = await fetch(`${import.meta.env.VITE_API_URL}/api/search`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -75,10 +74,10 @@ function Form() {
         setfurnitures(result)
     }
 
-    const handleClick = async (image: string) => {
+    const handleClick = async () => {
 
         try{
-            await postFurniture(image)
+            await postFurniture()
         }
         catch(e){
             console.log("Posting Error")
@@ -110,7 +109,7 @@ function Form() {
 
             <div id="result-wrapper">
                 {furnitures.map((furniture)=>(
-                    <div key={furniture.image}className="result" onClick={() => {handleClick(furniture.image)}}>
+                    <div key={furniture.image}className="result" onClick={() => {handleClick()}}>
                         <img src={furniture.image}/>
                     </div>
                 ))}
