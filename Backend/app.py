@@ -2,6 +2,13 @@ from flask import Flask, jsonify, request
 
 app = Flask(__name__)
 
+inventory = [
+    {"id": 1, "name": "Nordic Chair", "category": "Chairs", "price": 129},
+    {"id": 2, "name": "Cloud Sofa", "category": "Sofas", "price": 899},
+    {"id": 3, "name": "Oak Dining Table", "category": "Tables", "price": 499},
+    {"id": 4, "name": "Arc Floor Lamp", "category": "Lighting", "price": 179},
+]
+
 # 1. getDefaultHome - General welcome or landing data
 @app.route('/api/home', methods=['GET'])
 def get_default_home():
@@ -42,4 +49,7 @@ def get_furniture_object(item_id):
     return jsonify({"error": "Item not found"}), 404
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=True, host='0.0.0.0', port=5000)
+
+
+application = app
